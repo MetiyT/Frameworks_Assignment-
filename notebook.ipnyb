@@ -1,0 +1,66 @@
+# CORD-19 Data Exploration Notebook
+
+import pandas as pd
+import matplotlib.pyplot as plt
+from collections import Counter
+from wordcloud import WordCloud
+import re
+
+# Load dataset
+df = pd.read_csv('metadata.csv')
+
+# Preview data
+df.head()
+
+# Basic info
+print(df.shape)
+print(df.info())
+
+# Check missing values
+print(df.isnull().sum())
+
+# Convert publish_time to datetime and extract year
+df['publish_time'] = pd.to_datetime(df['publish_time'], errors='coerce')
+df['year'] = df['publish_time'].dt.year
+
+# Fill missing values
+df['title'].fillna('', inplace=True)
+df['journal'].fillna('Unknown', inplace=True)
+
+# Create abstract word count
+df['abstract_word_count'] = df['abstract'].apply(lambda x: len(str(x).split()))
+
+# --- Analysis and Visualization ---
+
+# Publications by year
+year_counts = df['year'].value_counts().sort_index()
+plt.figure(figsize=(10,5))
+plt.bar(year_counts.index, year_counts.values, color='skyblue')
+plt.xlabel('Year')
+plt.ylabel('Number of Publications')
+plt.title('Publications by Year')
+plt.show()
+
+# Top 10 journals
+top_journals = df['journal'].value_counts().head(10)
+top_journals.plot(kind='bar', figsize=(10,5), color='coral')
+plt.title('Top 10 Journals Publishing COVID-19 Research')
+plt.show()
+
+# Word frequency in titles
+all_titles = ' '.join(df['title'].tolist()).lower()
+words = re.findall(r'\b\w+\b', all_titles)
+word_counts = Counter(words)
+common_words = word_counts.most_common(20)
+
+words_df = pd.DataFrame(common_words, columns=['word','count'])
+words_df.plot(kind='bar', x='word', y='count', legend=False, figsize=(12,5), color='green')
+plt.title('Most Frequent Words in Titles')
+plt.show()
+
+# Word Cloud
+wordcloud = WordCloud(width=800, height=400, background_color='white').generate(all_titles)
+plt.figure(figsize=(15,7))
+plt.imshow(wordcloud, interpolation='bilinear')
+plt.axis('off')
+plt.show()
