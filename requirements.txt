@@ -1,4 +1,5 @@
-pip install -r pandas
-pip install -r matplotlib
-pip install -r seaborn
-
+pandas
+matplotlib
+seaborn
+streamlit
+wordcloud
